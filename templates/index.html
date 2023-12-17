@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="https://kit.fontawesome.com/1cb31e507a.js" crossorigin="anonymous"></script>
+    <title>Products</title>
+</head>
+<body>
+    <p class="navbar-brand" href="#">ShoesStore</p><br><br>
+    <h1 id="our">Our Products</h1>
+    
+    <div class="search-bar">
+        <input type="text" id="text-search" placeholder="Search by name...">
+        <button class="btn" onclick="openPopup()"><i class="fas fa-camera"></i></button>
+        <button onclick="searchByText()">Search</button>
+        <button onclick="showAllProducts()">Home</button>
+    </div>
+
+    <div class="popup-container" id="popupContainer">
+        <div class="popup-content">
+            <input type="file" id="fileInput" class="inputfile" accept="image/*">
+            <div class="button-container">
+                <button class="button" id="searchClose" onclick="closePopup()">Close</button>
+                <button class="button" id="searchOpen" onclick="submitImage()">Image Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="info">
+        {% for product in products %}
+            <div class="img">
+                <img src="{{ url_for('static', filename=product['image']) }}">
+                <div class="img-desc">
+                    <h4><b>Name:</b> {{ product['name'] }}</h4>
+                    <p><b>Price:</b> Rs. {{ product['price'] }}/-</p>
+                    <button>Add to cart</button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function openPopup() {
+            document.getElementById('popupContainer').style.display = 'block';
+        }
+    
+        function closePopup() {
+            document.getElementById('popupContainer').style.display = 'none';
+        }
+    
+        function submitImage() {
+            var fileInput = document.getElementById('fileInput');
+            var selectedFile = fileInput.files[0];
+        
+            if (selectedFile) {
+                var formData = new FormData();
+                formData.append('image', selectedFile);
+        
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Update the products list with the filtered products
+                    console.log(data); // Corrected print statement
+                    updateProducts(data.filtered_products);
+        
+                    alert('Image submitted. Filename: ' + selectedFile.name);
+                    closePopup();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            } else {
+                alert('Please select an image before submitting.');
+            }
+        }
+        
+        function updateProducts(filteredProducts) {
+            // Clear the existing products in the info div
+            var infoDiv = document.getElementById('info');
+            infoDiv.innerHTML = '';
+    
+            // Add the filtered products to the info div
+            for (var i = 0; i < filteredProducts.length; i++) {
+                var product = filteredProducts[i];
+    
+                var productDiv = document.createElement('div');
+                productDiv.className = 'img';
+    
+                var imgElement = document.createElement('img');
+                imgElement.src = '{{ url_for("static", filename="' + product.image + '") }}';
+    
+                var imgDescDiv = document.createElement('div');
+                imgDescDiv.className = 'img-desc';
+    
+                var h4Element = document.createElement('h4');
+                h4Element.innerHTML = '<b>Name:</b> ' + product.name;
+    
+                var pElement = document.createElement('p');
+                pElement.innerHTML = '<b>Price:</b> Rs. ' + product.price + '/-';
+    
+                var buttonElement = document.createElement('button');
+                buttonElement.innerHTML = 'Add to cart';
+    
+                // Append elements to the product div
+                imgDescDiv.appendChild(h4Element);
+                imgDescDiv.appendChild(pElement);
+                imgDescDiv.appendChild(buttonElement);
+    
+                productDiv.appendChild(imgElement);
+                productDiv.appendChild(imgDescDiv);
+    
+                // Append the product div to the info div
+                infoDiv.appendChild(productDiv);
+            }
+        }
+    
+        function searchByText() {
+            // Implement logic to search products by text
+        }
+        function showAllProducts() {
+            // Reload all products
+            fetch('/all_products')
+            .then(response => response.json())
+            .then(data => {
+                // Update the products list with all products
+                updateProducts(data.products);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+    </script>
+    
+</body>
+</html>
