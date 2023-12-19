@@ -10,12 +10,20 @@
 <body>
     <p class="navbar-brand" href="#">ShoesStore</p><br><br>
     <h1 id="our">Our Products</h1>
+    <nav>
+        <a href="#" onclick="showAllProducts()">Home</a>
+        <a href="#" onclick="filterProducts('manShoes')">Man Shoes</a>
+        <a href="#" onclick="filterProducts('womenShoes')">Women Shoes</a>
+        <a href="#" onclick="filterProducts('pants')">Pants</a>
+        <a href="#" onclick="filterProducts('shirts')">Shirts</a>
+        <a href="#" onclick="filterProducts('caps')">Caps</a>
+    </nav>
     
     <div class="search-bar">
         <input type="text" id="text-search" placeholder="Search by name...">
         <button class="btn" onclick="openPopup()"><i class="fas fa-camera"></i></button>
         <button onclick="searchByText()">Search</button>
-        <button onclick="showAllProducts()">Home</button>
+        
     </div>
 
     <div class="popup-container" id="popupContainer">
@@ -65,7 +73,6 @@
                 .then(response => response.json())
                 .then(data => {
                     // Update the products list with the filtered products
-                    console.log(data); // Corrected print statement
                     updateProducts(data.filtered_products);
         
                     alert('Image submitted. Filename: ' + selectedFile.name);
@@ -92,7 +99,7 @@
                 productDiv.className = 'img';
     
                 var imgElement = document.createElement('img');
-                imgElement.src = '{{ url_for("static", filename="' + product.image + '") }}';
+                imgElement.src = '/static/' + product.image;
     
                 var imgDescDiv = document.createElement('div');
                 imgDescDiv.className = 'img-desc';
@@ -122,6 +129,7 @@
         function searchByText() {
             // Implement logic to search products by text
         }
+        
         function showAllProducts() {
             // Reload all products
             fetch('/all_products')
@@ -134,7 +142,19 @@
                 console.error('Error:', error);
             });
         }
-        
+
+        function filterProducts(category) {
+            // Fetch products for the selected category
+            fetch('/filter_products?category=' + category)
+            .then(response => response.json())
+            .then(data => {
+                // Update the products list with the filtered products
+                updateProducts(data.filtered_products);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
     </script>
     
 </body>
