@@ -18,15 +18,7 @@
         <a href="#" onclick="filterProducts('shirts')">Shirts</a>
         <a href="#" onclick="filterProducts('caps')">Caps</a>
     </nav>
-    
-    <div class="search-bar">
-        <input type="text" id="text-search" placeholder="Search by name...">
-        <button class="btn" onclick="openPopup()"><i class="fas fa-camera"></i></button>
-        <button onclick="searchByText()">Search</button>
-        
-    </div>
-
-    <div class="popup-container" id="popupContainer">
+     <div class="popup-container" id="popupContainer">
         <div class="popup-content">
             <input type="file" id="fileInput" class="inputfile" accept="image/*">
             <div class="button-container">
@@ -36,6 +28,14 @@
         </div>
     </div>
 
+    <div class="search-bar">
+        <input type="text" id="text-search" placeholder="Search by name...">
+        <button class="btn" onclick="openPopup()"><i class="fas fa-camera"></i></button>
+        <button onclick="searchByText()">Search</button>
+        
+    </div>
+
+   
     <div id="info">
         {% for product in products %}
             <div class="img">
@@ -73,9 +73,15 @@
                 .then(response => response.json())
                 .then(data => {
                     // Update the products list with the filtered products
-                    updateProducts(data.filtered_products);
-        
-                    alert('Image submitted. Filename: ' + selectedFile.name);
+                    if(data.filtered_products==null){
+                        showAllProducts();
+                        alert('no file all prouc : ' );
+                    }
+                    else {
+                        updateProducts(data.filtered_products);
+                        alert('Image submitted. Filename: ' + selectedFile.name);
+                    }
+                   
                     closePopup();
                 })
                 .catch(error => {

@@ -1,5 +1,5 @@
-0 manShoes 
-1 womenShoes 
-2 pants 
-3 shirst
+0 shirts
+1 pants
+2 manShoes 
+3 womenShoes 
 4 caps
