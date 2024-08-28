@@ -4,8 +4,8 @@ import numpy as np
 import os
 
 def predict_image( image_path):
-    model_path = "C:\\Users\LENOVO\Documents\python_prog\PYTHON-IMAGE-SEARCH-PROJECT-\Prediction\converted_keras\keras_model.h5"
-    labels_path = "C:\\Users\LENOVO\Documents\python_prog\PYTHON-IMAGE-SEARCH-PROJECT-\Prediction\converted_keras\labels.txt"
+    model_path = "./Prediction/converted_keras/keras_model.h5"
+    labels_path = "./Prediction/converted_keras/labels.txt"
     # Load the model
     model = load_model(model_path, compile=False)
 
@@ -37,7 +37,7 @@ def predict_image( image_path):
 
 
 def create_product_list():
-    root_folder='C:\\Users\LENOVO\Documents\python_prog\PYTHON-IMAGE-SEARCH-PROJECT-\static'
+    root_folder='./static'
     product_list = []
 
     # Iterate through each subdirectory in the root folder

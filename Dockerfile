@@ -1,30 +1,21 @@
-# Use a Miniconda image as the base image
-FROM continuumio/miniconda3:latest
+# Use the Anaconda3 base image
+FROM continuumio/anaconda3:2023.09-0
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1
-
-# Create a working directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy the environment.yml file and install the dependencies
-COPY environment.yml .
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-# Add necessary channels
-RUN conda config --add channels conda-forge
+# Create the conda environment
+COPY environment.yaml .
+RUN conda env create -f environment.yaml
 
-# Install mamba and create the environment
-RUN conda install mamba -n base -c conda-forge \
-    && mamba env create -f environment.yml
+# Make RUN commands use the new environment
+SHELL ["conda", "run", "-n", "myenv", "/bin/bash", "-c"]
 
-# Activate the environment
-SHELL ["conda", "run", "-n", "your-environment-name", "/bin/bash", "-c"]
-
-# Copy the rest of the application code
-COPY . .
-
-# Expose the port the app runs on
+# Make port 5000 available to the world outside this container
 EXPOSE 5000
 
-# Run the Flask application
-CMD ["conda", "run", "--no-capture-output", "-n", "your-environment-name", "flask", "run", "--host=0.0.0.0"]
+# Run app.py when the container launches
+CMD ["conda", "run", "-n", "myenv", "python", "app.py"]
