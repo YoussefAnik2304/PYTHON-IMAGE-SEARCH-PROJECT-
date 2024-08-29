@@ -1,7 +1,11 @@
 from keras.models import load_model
+
 import cv2
 import numpy as np
 import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Set the log level to suppress INFO and WARNING messages
+
 
 def predict_image( image_path):
     model_path = "./Prediction/converted_keras/keras_model.h5"
