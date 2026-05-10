@@ -1,7 +1,6 @@
 Werkzeug==3.0.3
 flask
-tensorflow==2.10.0 
 tensorflow-cpu==2.10.0  
 keras==2.10.0 
-opencv-python==4.6.0.66 
-numpy==1.24.4        
+opencv-python-headless==4.6.0.66 
+numpy==1.24.4

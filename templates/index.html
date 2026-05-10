@@ -5,64 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <script src="https://kit.fontawesome.com/1cb31e507a.js" crossorigin="anonymous"></script>
-    <title>Products</title>
+    <title>Vision Store | Smart Product Search</title>
 </head>
 <body>
-    <p class="navbar-brand" href="#">ShoesStore</p><br><br>
-    <h1 id="our">Our Products</h1>
-    <nav>
-        <a href="#" onclick="showAllProducts()">Home</a>
-        <a href="#" onclick="filterProducts('manShoes')">Man Shoes</a>
-        <a href="#" onclick="filterProducts('womenShoes')">Women Shoes</a>
-        <a href="#" onclick="filterProducts('pants')">Pants</a>
-        <a href="#" onclick="filterProducts('shirts')">Shirts</a>
-        <a href="#" onclick="filterProducts('caps')">Caps</a>
-    </nav>
-     <div class="popup-container" id="popupContainer">
+    <div class="wrapper">
+        <header class="navbar">
+            <div class="brand">VISION STORE</div>
+            <nav class="nav-links">
+                <a href="#" onclick="showAllProducts()" class="active">Home</a>
+                <a href="#" onclick="filterProducts('manShoes')">Men</a>
+                <a href="#" onclick="filterProducts('womenShoes')">Women</a>
+                <a href="#" onclick="filterProducts('pants')">Pants</a>
+                <a href="#" onclick="filterProducts('shirts')">Shirts</a>
+                <a href="#" onclick="filterProducts('caps')">Caps</a>
+            </nav>
+        </header>
+
+        <section class="header-section">
+            <h1>Find your style <br>with AI vision.</h1>
+            <p style="color: var(--text-muted)">Search by name or upload an image to find matching products instantly.</p>
+        </section>
+
+        <div class="search-container">
+            <input type="text" id="text-search" class="search-input" placeholder="What are you looking for?">
+            <button class="btn-icon" onclick="openPopup()" title="Search by Image">
+                <i class="fas fa-camera"></i>
+            </button>
+            <button class="btn-primary" onclick="searchByText()">Search</button>
+        </div>
+
+        <div id="info">
+            {% for product in products %}
+                <div class="product-card">
+                    <div class="product-image-container">
+                        <img src="{{ url_for('static', filename=product['image']) }}" alt="{{ product['name'] }}">
+                    </div>
+                    <div class="product-info">
+                        <p class="product-category">{{ product['category'] }}</p>
+                        <h3 class="product-name">{{ product['name'] }}</h3>
+                        <p class="product-price">Rs. {{ product['price'] }}/-</p>
+                        <button class="btn-cart">Add to cart</button>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Image Search Modal -->
+    <div class="popup-container" id="popupContainer">
         <div class="popup-content">
-            <input type="file" id="fileInput" class="inputfile" accept="image/*">
-            <div class="button-container">
-                <button class="button" id="searchClose" onclick="closePopup()">Close</button>
-                <button class="button" id="searchOpen" onclick="submitImage()">Image Submit</button>
+            <h2>Search by Image</h2>
+            <div class="drop-zone" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt fa-2x" style="margin-bottom: 1rem; color: var(--primary)"></i>
+                <p>Click to upload or drag and drop</p>
+                <input type="file" id="fileInput" style="display: none;" accept="image/*" onchange="previewImage(this)">
+                <div id="imagePreview" class="preview-container">
+                    <img id="previewImg" src="#" alt="Preview">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closePopup()">Cancel</button>
+                <button class="btn-primary" id="searchSubmit" onclick="submitImage()">Find Matches</button>
             </div>
         </div>
     </div>
 
-    <div class="search-bar">
-        <input type="text" id="text-search" placeholder="Search by name...">
-        <button class="btn" onclick="openPopup()"><i class="fas fa-camera"></i></button>
-        <button onclick="searchByText()">Search</button>
-        
-    </div>
-
-   
-    <div id="info">
-        {% for product in products %}
-            <div class="img">
-                <img src="{{ url_for('static', filename=product['image']) }}">
-                <div class="img-desc">
-                    <h4><b>Name:</b> {{ product['name'] }}</h4>
-                    <p><b>Price:</b> Rs. {{ product['price'] }}/-</p>
-                    <button>Add to cart</button>
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-
     <script>
         function openPopup() {
-            document.getElementById('popupContainer').style.display = 'block';
+            document.getElementById('popupContainer').style.display = 'flex';
         }
     
         function closePopup() {
             document.getElementById('popupContainer').style.display = 'none';
+            resetPreview();
+        }
+
+        function previewImage(input) {
+            const preview = document.getElementById('imagePreview');
+            const previewImg = document.getElementById('previewImg');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function resetPreview() {
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('fileInput').value = '';
         }
     
         function submitImage() {
             var fileInput = document.getElementById('fileInput');
             var selectedFile = fileInput.files[0];
+            var submitBtn = document.getElementById('searchSubmit');
         
             if (selectedFile) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+                submitBtn.disabled = true;
+
                 var formData = new FormData();
                 formData.append('image', selectedFile);
         
@@ -72,96 +116,74 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Update the products list with the filtered products
-                    if(data.filtered_products==null){
-                        showAllProducts();
-                        alert('no file all prouc : ' );
-                    }
-                    else {
+                    if(data.filtered_products && data.filtered_products.length > 0) {
                         updateProducts(data.filtered_products);
-                        alert('Image submitted. Filename: ' + selectedFile.name);
+                        closePopup();
+                    } else {
+                        alert('No products found matching this image.');
                     }
-                   
-                    closePopup();
                 })
                 .catch(error => {
                     console.error('Error:', error);
+                })
+                .finally(() => {
+                    submitBtn.innerHTML = 'Find Matches';
+                    submitBtn.disabled = false;
                 });
             } else {
-                alert('Please select an image before submitting.');
+                alert('Please select an image first.');
             }
         }
         
         function updateProducts(filteredProducts) {
-            // Clear the existing products in the info div
             var infoDiv = document.getElementById('info');
             infoDiv.innerHTML = '';
     
-            // Add the filtered products to the info div
-            for (var i = 0; i < filteredProducts.length; i++) {
-                var product = filteredProducts[i];
-    
-                var productDiv = document.createElement('div');
-                productDiv.className = 'img';
-    
-                var imgElement = document.createElement('img');
-                imgElement.src = '/static/' + product.image;
-    
-                var imgDescDiv = document.createElement('div');
-                imgDescDiv.className = 'img-desc';
-    
-                var h4Element = document.createElement('h4');
-                h4Element.innerHTML = '<b>Name:</b> ' + product.name;
-    
-                var pElement = document.createElement('p');
-                pElement.innerHTML = '<b>Price:</b> Rs. ' + product.price + '/-';
-    
-                var buttonElement = document.createElement('button');
-                buttonElement.innerHTML = 'Add to cart';
-    
-                // Append elements to the product div
-                imgDescDiv.appendChild(h4Element);
-                imgDescDiv.appendChild(pElement);
-                imgDescDiv.appendChild(buttonElement);
-    
-                productDiv.appendChild(imgElement);
-                productDiv.appendChild(imgDescDiv);
-    
-                // Append the product div to the info div
-                infoDiv.appendChild(productDiv);
-            }
+            filteredProducts.forEach(product => {
+                const card = `
+                    <div class="product-card" style="animation: fadeIn 0.6s ease-out forwards">
+                        <div class="product-image-container">
+                            <img src="/static/${product.image}" alt="${product.name}">
+                        </div>
+                        <div class="product-info">
+                            <p class="product-category">${product.category}</p>
+                            <h3 class="product-name">${product.name}</h3>
+                            <p class="product-price">Rs. ${product.price}/-</p>
+                            <button class="btn-cart">Add to cart</button>
+                        </div>
+                    </div>
+                `;
+                infoDiv.innerHTML += card;
+            });
         }
     
         function searchByText() {
-            // Implement logic to search products by text
+            const query = document.getElementById('text-search').value.toLowerCase();
+            fetch('/all_products')
+                .then(res => res.json())
+                .then(data => {
+                    const filtered = data.products.filter(p => 
+                        p.name.toLowerCase().includes(query) || 
+                        p.category.toLowerCase().includes(query)
+                    );
+                    updateProducts(filtered);
+                });
         }
         
         function showAllProducts() {
-            // Reload all products
             fetch('/all_products')
-            .then(response => response.json())
-            .then(data => {
-                // Update the products list with all products
-                updateProducts(data.products);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+                .then(res => res.json())
+                .then(data => updateProducts(data.products));
         }
 
         function filterProducts(category) {
-            // Fetch products for the selected category
+            document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+            event.target.classList.add('active');
+
             fetch('/filter_products?category=' + category)
-            .then(response => response.json())
-            .then(data => {
-                // Update the products list with the filtered products
-                updateProducts(data.filtered_products);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
+                .then(res => res.json())
+                .then(data => updateProducts(data.filtered_products));
         }
     </script>
-    
 </body>
 </html>

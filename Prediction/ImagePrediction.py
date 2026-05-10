@@ -7,22 +7,19 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Set the log level to suppress INFO and WARNING messages
 
 
-def predict_image( image_path):
-    model_path = "./Prediction/converted_keras/keras_model.h5"
-    labels_path = "./Prediction/converted_keras/labels.txt"
-    # Load the model
-    model = load_model(model_path, compile=False)
+# Global paths
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "converted_keras/keras_model.h5")
+LABELS_PATH = os.path.join(os.path.dirname(__file__), "converted_keras/labels.txt")
 
-    # Load the labels
-    class_names = open(labels_path, "r").readlines()
+# Global model and labels (Loaded once at startup)
+print("Loading ML model...")
+MODEL = load_model(MODEL_PATH, compile=False)
+CLASS_NAMES = open(LABELS_PATH, "r").readlines()
 
-    # Read the image from the specified path
-    image = cv2.imread(image_path)
-
+def predict_image(image_path):
     # Resize the image into (224-height, 224-width) pixels
+    image = cv2.imread(image_path)
     image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
-
-
 
     # Make the image a numpy array and reshape it to the model's input shape.
     image = np.asarray(image, dtype=np.float32).reshape(1, 224, 224, 3)
@@ -31,11 +28,15 @@ def predict_image( image_path):
     image = (image / 127.5) - 1
 
     # Predict the model
-    prediction = model.predict(image)
+    prediction = MODEL.predict(image)
     index = np.argmax(prediction)
-    class_name = class_names[index]
-    confidence_score = prediction[0][index]
-    os.remove(image_path)
+    class_name = CLASS_NAMES[index]
+    
+    # confidence_score = prediction[0][index]
+    
+    if os.path.exists(image_path):
+        os.remove(image_path)
+        
     # return prediction and confidence score
     return class_name[2:]
 
