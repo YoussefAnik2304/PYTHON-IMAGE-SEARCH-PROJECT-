@@ -1,43 +1,51 @@
-from keras.models import load_model
-
-import cv2
-import numpy as np
-import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Set the log level to suppress INFO and WARNING messages
-
-
 # Global paths
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "converted_keras/keras_model.h5")
+TFLITE_MODEL_PATH = os.path.join(os.path.dirname(__file__), "converted_keras/model.tflite")
 LABELS_PATH = os.path.join(os.path.dirname(__file__), "converted_keras/labels.txt")
 
-# Global model and labels (Loaded once at startup)
-print("Loading ML model...")
-MODEL = load_model(MODEL_PATH, compile=False)
+# Try to use tflite-runtime for production, fallback to tensorflow for local
+try:
+    import tflite_runtime.interpreter as tflite
+except ImportError:
+    try:
+        from tensorflow import lite as tflite
+    except ImportError:
+        print("Error: Neither tflite-runtime nor tensorflow is installed.")
+
+# Global Interpreter and labels (Loaded once at startup)
+print(f"Loading TFLite model from {TFLITE_MODEL_PATH}...")
+INTERPRETER = tflite.Interpreter(model_path=TFLITE_MODEL_PATH)
+INTERPRETER.allocate_tensors()
+
+# Get input and output details
+INPUT_DETAILS = INTERPRETER.get_input_details()
+OUTPUT_DETAILS = INTERPRETER.get_output_details()
+
 CLASS_NAMES = open(LABELS_PATH, "r").readlines()
 
 def predict_image(image_path):
-    # Resize the image into (224-height, 224-width) pixels
+    # Read and resize image
     image = cv2.imread(image_path)
     image = cv2.resize(image, (224, 224), interpolation=cv2.INTER_AREA)
 
-    # Make the image a numpy array and reshape it to the model's input shape.
+    # Preprocess image
     image = np.asarray(image, dtype=np.float32).reshape(1, 224, 224, 3)
-
-    # Normalize the image array
     image = (image / 127.5) - 1
 
-    # Predict the model
-    prediction = MODEL.predict(image)
+    # Set input tensor
+    INTERPRETER.set_tensor(INPUT_DETAILS[0]['index'], image)
+
+    # Run inference
+    INTERPRETER.invoke()
+
+    # Get output tensor
+    prediction = INTERPRETER.get_tensor(OUTPUT_DETAILS[0]['index'])
+    
     index = np.argmax(prediction)
     class_name = CLASS_NAMES[index]
-    
-    # confidence_score = prediction[0][index]
     
     if os.path.exists(image_path):
         os.remove(image_path)
         
-    # return prediction and confidence score
     return class_name[2:]
 
 
