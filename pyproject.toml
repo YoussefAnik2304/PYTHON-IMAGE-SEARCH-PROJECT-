@@ -1,0 +1,13 @@
+[project]
+name = "python-image-search"
+version = "0.1.0"
+dependencies = [
+    "flask",
+    "tflite-runtime",
+    "opencv-python-headless==4.6.0.66",
+    "numpy==1.24.4",
+    "werkzeug==3.0.3"
+]
+
+[tool.uv]
+environments = ["sys_platform == 'linux'"]
